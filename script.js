@@ -3,35 +3,45 @@ let apiEndpointURL = "https://word-guesser-api.vercel.app/api/word";
 let wordToGuess = [];
 let wordsGuessedCorrectly = 0;
 
-let roundDuration = 60;
+let roundDuration = 10;
+let currentTime;
 
-let currentTime = roundDuration;
 let countdownTimer;
 
 const wordInputElement = document.getElementById("current__guessword");
 
 function startTimer() {
-  countdownTimer = setInterval(() => {
-    if (currentTime > 0) {
-      currentTime--;
-      console.log("timer is currently", currentTime);
-      updateUITimerDisplay();
-    } else {
-      endGameRound();
-    }
-  }, 1000);
+  if (!countdownTimer) {
+    countdownTimer = setInterval(() => {
+      if (currentTime > 0) {
+        currentTime--;
+        console.log(
+          "timer is currently",
+          currentTime,
+          "timer interval is",
+          countdownTimer
+        );
+        updateUITimerDisplay();
+      }
+    }, 1000);
+  }
 }
 
 function stopTimer() {
   clearInterval(countdownTimer);
+  countdownTimer = null;
 }
 
-function updateWordsGuessedCorrectly() {
-  wordsGuessedCorrectly++;
+function updateWordsGuessedCorrectly(updatedValue) {
+  wordsGuessedCorrectly = updatedValue;
+  console.log("correct words now", wordsGuessedCorrectly);
+  document.getElementById("correct__guess__counter").textContent =
+    wordsGuessedCorrectly;
 }
 
 function updateUITimerDisplay() {
   document.getElementById("timer__display").textContent = currentTime;
+  if (currentTime === 0) endGameRound();
 }
 
 function updateUIWordList(word, definition) {
@@ -77,17 +87,72 @@ function sanitizeWord(unsanitized) {
     .toLowerCase();
 }
 
+function promptToRestart() {
+  let summaryStr = `Nice work, you correctly guessed 
+  ${wordsGuessedCorrectly} words in ${roundDuration} seconds! You wanna play again?`;
+  displayPrompt(summaryStr);
+}
+
+async function beginGameRound() {
+  currentTime = roundDuration;
+  updateWordsGuessedCorrectly(0);
+
+  // wordInputElement.setAttribute("disabled", false);
+  wordInputElement.removeAttribute("disabled");
+  // wordInputElement.disabled = "false";
+  await resetGuessWord();
+  if (!countdownTimer) startTimer();
+  wordInputElement.focus();
+  // startTimer();
+}
+
 function endGameRound() {
   stopTimer();
-  wordInputElement.setAttribute("disabled", true);
+  console.log("countdown timer state", countdownTimer);
+  wordInputElement.setAttribute("disabled", null);
+  promptToRestart();
+}
 
-  console.log(
-    "Nice work, you correctly guessed",
-    wordsGuessedCorrectly,
-    "words in",
-    roundDuration,
-    "seconds!"
-  );
+function displayPrompt(message) {
+  applyBackgroundBlur();
+
+  let promptElement = document.createElement("div");
+  promptElement.classList.add("ui__prompt", "active");
+
+  let promptMsgDiv = document.createElement("div");
+  promptMsgDiv.textContent = message;
+
+  let promptBtnDiv = document.createElement("div");
+  let confirmBtn = document.createElement("button");
+  confirmBtn.id = "btn__continue";
+  confirmBtn.textContent = "Run it back!";
+
+  let cancelBtn = document.createElement("button");
+  cancelBtn.id = "btn__cancel";
+  cancelBtn.textContent = "Nah, I'm good.";
+
+  promptElement.appendChild(promptMsgDiv);
+  promptBtnDiv.appendChild(confirmBtn);
+  promptBtnDiv.appendChild(cancelBtn);
+  promptElement.appendChild(promptBtnDiv);
+
+  confirmBtn.addEventListener("click", async (e) => {
+    applyBackgroundBlur();
+    promptElement.classList.remove("active");
+    await beginGameRound();
+  });
+
+  cancelBtn.addEventListener("click", (e) => {
+    applyBackgroundBlur();
+    promptElement.classList.remove("active");
+    return;
+  });
+
+  document.querySelector("body").appendChild(promptElement);
+}
+
+function applyBackgroundBlur() {
+  document.querySelector("body").classList.toggle("blurred");
 }
 
 function checkIfWordIsCorrect(input) {
@@ -95,16 +160,16 @@ function checkIfWordIsCorrect(input) {
 }
 
 async function guessWasSuccessful() {
-  wordsGuessedCorrectly++;
+  wordsGuessedCorrectly += 1;
+  updateWordsGuessedCorrectly(wordsGuessedCorrectly);
+  wordInputElement.value = "";
 
-  document.getElementById("correct__guess__counter").textContent =
-    wordsGuessedCorrectly;
   console.log("Yeah! You guessed it!");
   await resetGuessWord();
 }
 
 async function resetGuessWord() {
-  wordInputElement.focus();
+  // wordInputElement.focus();
   await fetchNewWord();
   if (!countdownTimer) startTimer();
 }
@@ -112,12 +177,12 @@ async function resetGuessWord() {
 wordInputElement.addEventListener("input", async (e) => {
   if (checkIfWordIsCorrect(e.target.value) === true) {
     setTimeout(async () => {
-      wordInputElement.value = "";
       await guessWasSuccessful();
     }, 500);
   }
 });
 
 window.addEventListener("DOMContentLoaded", async (e) => {
-  await resetGuessWord();
+  beginGameRound();
+  // displayPrompt("Test message for the lulz.");
 });
