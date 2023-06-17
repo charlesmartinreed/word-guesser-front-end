@@ -1,10 +1,14 @@
-let apiEndpointURL = "/words";
+let apiEndpointURL = "https://word-guesser-api.vercel.app/api/word";
 
-let wordsToGuess = [];
-let wordsGuessedCorrectly = [];
+let wordToGuess = [];
+let wordsGuessedCorrectly = 0;
 
-let currentTime = 60;
+let roundDuration = 60;
+
+let currentTime = roundDuration;
 let countdownTimer;
+
+const wordInputElement = document.getElementById("current__guessword");
 
 function startTimer() {
   countdownTimer = setInterval(() => {
@@ -12,7 +16,9 @@ function startTimer() {
       currentTime--;
       console.log("timer is currently", currentTime);
       updateUITimerDisplay();
-    } else return;
+    } else {
+      endGameRound();
+    }
   }, 1000);
 }
 
@@ -20,93 +26,98 @@ function stopTimer() {
   clearInterval(countdownTimer);
 }
 
-function updateTimer() {
-  // if the word is correctly guessed, add more time to the clock
-  // if ALL words are guesed correctly, add EVEN MORE time to the clock
-
-  if (wordsToGuess.length > 0) currentTime += 10;
-  if (wordsToGuess.length === 0) currentTime += 30;
-  startTimer();
+function updateWordsGuessedCorrectly() {
+  wordsGuessedCorrectly++;
 }
 
 function updateUITimerDisplay() {
   document.getElementById("timer__display").textContent = currentTime;
 }
 
-function updateUIWordList() {
-  console.log("updating ui with words", wordsToGuess);
+function updateUIWordList(word, definition) {
+  // console.log("updating ui with words", wordToGuess);
+  wordToGuess = sanitizeWord(word);
 
-  document.querySelectorAll(".word__definition").forEach((definitionDiv) => {
-    let wordAndDef = wordsToGuess[definitionDiv.getAttribute("data-index")];
-    let [word, definition] = wordAndDef;
-    definitionDiv.textContent = `${word.length} letter word meaning ${definition}`;
+  document.querySelector(
+    ".word__definition"
+  ).innerHTML = `<span id="span__word__length">${word.length} letter word</span> that means <span id="span__word__definition">${definition}.</span>`;
+
+  console.log("current word is", wordToGuess);
+}
+
+async function fetchNewWord() {
+  parseFetchResult({
+    word: "test!wor_d",
+    definitions: "the definition of a word that definitely exists",
   });
+  return;
+
+  // try {
+  //   let res = await fetch(apiEndpointURL);
+  //   if (res.ok) {
+  //     let data = await res.json();
+  //     parseFetchResult(data);
+  //   }
+  // } catch (e) {
+  //   console.error(e);
+  // }
 }
 
-async function fetchWords(URL, wordCount) {
-  // will return an array of arrays
-  // where each item looks like: { word: word, definition: {definition} }
+function parseFetchResult(result) {
+  console.log("fetched result", result);
+  let { word, definitions } = result;
 
-  let res = JSON.stringify([
-    [
-      {
-        word: "first",
-        defintions: ["definition 1", "definition 2"],
-      },
-    ],
-    [
-      {
-        word: "second",
-        defintions: ["definition 1", "definition 2", "definition 3"],
-      },
-    ],
-    [
-      {
-        word: "third",
-        defintions: ["definition 1"],
-      },
-    ],
-    [
-      {
-        word: "four",
-        defintions: [
-          "definition 1",
-          "definition 2",
-          "definition 3",
-          "definition 4",
-          "definition 5",
-          "definition 6",
-        ],
-      },
-    ],
-  ]);
-  res = JSON.parse(res);
+  updateUIWordList(word, definitions);
+}
 
-  try {
-    // let res = await fetch(`${URL}/${wordCount}`);
-    if (res) {
-      parseFetchResults(res);
-    }
-  } catch {
-    console.error(e);
+function sanitizeWord(unsanitized) {
+  return unsanitized
+    .match(/[a-z|A-Z]+/gi)
+    .join("")
+    .toLowerCase();
+}
+
+function endGameRound() {
+  stopTimer();
+  wordInputElement.setAttribute("disabled", true);
+
+  console.log(
+    "Nice work, you correctly guessed",
+    wordsGuessedCorrectly,
+    "words in",
+    roundDuration,
+    "seconds!"
+  );
+}
+
+function checkIfWordIsCorrect(input) {
+  return sanitizeWord(input) === wordToGuess;
+}
+
+async function guessWasSuccessful() {
+  wordsGuessedCorrectly++;
+
+  document.getElementById("correct__guess__counter").textContent =
+    wordsGuessedCorrectly;
+  console.log("Yeah! You guessed it!");
+  await resetGuessWord();
+}
+
+async function resetGuessWord() {
+  wordInputElement.focus();
+  await fetchNewWord();
+  if (!countdownTimer) startTimer();
+}
+
+wordInputElement.addEventListener("input", async (e) => {
+  if (checkIfWordIsCorrect(e.target.value) === true) {
+    setTimeout(async () => {
+      wordInputElement.value = "";
+      await guessWasSuccessful();
+    }, 500);
   }
-}
-
-function parseFetchResults(results) {
-  for (const [wordObj, _] of results) {
-    let { word, defintions } = wordObj;
-    let definition =
-      defintions.length === 1
-        ? defintions[0]
-        : defintions[Math.floor(Math.random() * (defintions.length - 0) + 0)];
-    wordsToGuess = [...wordsToGuess, [word, definition]];
-  }
-
-  updateUIWordList();
-}
+});
 
 window.addEventListener("DOMContentLoaded", async (e) => {
-  await fetchWords(apiEndpointURL, 10);
-  updateUIWordList();
-  startTimer();
+  await resetGuessWord();
 });

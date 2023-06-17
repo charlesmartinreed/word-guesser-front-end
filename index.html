@@ -8,30 +8,30 @@
     <title>Guess the Word!</title>
   </head>
   <body>
-    <div class="container__timer">
-      <p id="timer__display"></p>
+    <div class="container container__ui">
+      <div class="container__timer">
+        <h2 id="timer__display">60</h2>
+      </div>
+
+      <div class="container__correct__guess__count">
+        <h2 id="correct__guess__counter">0</h2>
+      </div>
     </div>
 
-    <div class="container__guessword">
-      <input type="text" name="current_guessword" id="current__guessword" />
+    <div class="container container__guessword">
+      <input
+        type="text"
+        name="current_guessword"
+        id="current__guessword"
+        autocomplete="off"
+        autofill="off"
+        autofocus="true"
+      />
     </div>
 
-    <div class="container__word__definitions">
+    <div class="container container__word__definitions">
       <div>
-        <p class="word__definition" data-index="0">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit.
-        </p>
-        <p class="word__definition" data-index="1">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident
-          velit beatae sed sequi labore!
-        </p>
-        <p class="word__definition" data-index="2">
-          Lorem ipsum dolor sit amet.
-        </p>
-        <p class="word__definition" data-index="3">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Repudiandae
-          aliquid eligendi nisi et nihil ex ad nesciunt!
-        </p>
+        <p class="word__definition" data-index="0"></p>
       </div>
     </div>
   </body>

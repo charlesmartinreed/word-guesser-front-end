@@ -6,21 +6,68 @@
 
 body,
 html {
+  background-color: rgb(226, 226, 226);
   height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 1rem;
 
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
+.container {
+  height: 30%;
+}
+
+.container__ui {
+  /* background-color: purple; */
+  /* height: 100px; */
+  width: 50%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: row;
+  text-align: center;
+}
+
+.container__timer {
+  color: #be4a4a;
+}
+
+.container__timer::after {
+  content: "seconds remaining";
+  color: inherit;
+}
+
+.container__correct__guess__count {
+  color: #6cb86c;
+}
+
+.container__correct__guess__count::after {
+  content: "correct guesses";
+}
+
+.container__timer::after,
+.container__correct__guess__count::after {
+  display: block;
+  color: inherit;
+  text-transform: capitalize;
+  font-style: italic;
+}
+
+.container__ui h2 {
+  font-size: 60px;
+  font-weight: 500;
+}
+
 .container__guessword {
-  height: 200px;
+  /* height: 200px; */
   width: 80%;
-  border-bottom: 5px solid black;
+  /* border-bottom: 5px solid black; */
 
   /* background-color: red; */
 }
@@ -29,27 +76,47 @@ html {
   width: 100%;
   height: 100%;
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 5rem;
   border: none;
   outline: none;
-  color: violet;
+  background: none;
+
+  /* caret-color: #942294; */
   text-transform: uppercase;
-  letter-spacing: 0.5rem;
+  /* letter-spacing: 1.5px; */
+  font-weight: 700;
+  color: rgb(81, 80, 80);
+}
+
+#current__guessword {
+  border-radius: 15px;
+  box-shadow: -4px 14px 10px 6px rgba(110, 100, 110, 0.1),
+    4px -1px 10px 2px rgba(110, 100, 110, 0.1);
 }
 
 .container__word__definitions {
   width: 80%;
-  height: 500px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background-color: red; */
   padding: 1rem;
+
+  font-size: 1.5rem;
+  color: rgba(54, 54, 54, 1);
 }
 
-.word__definition {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: rgba(54, 54, 54, 1);
+#span__word__length {
+  font-weight: 900;
+  color: rgb(44, 84, 124);
+  font-size: 1.85rem;
+  /* margin-right: 2px; */
+}
+
+#span__word__definition {
+  color: #942294;
+  border-bottom: 4px solid #942294;
 }
 
 .word__definition.cleared {
