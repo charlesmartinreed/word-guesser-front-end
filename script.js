@@ -3,24 +3,20 @@ let apiEndpointURL = "https://word-guesser-api.vercel.app/api/word";
 let wordToGuess = [];
 let wordsGuessedCorrectly = 0;
 
-let roundDuration = 10;
+let roundDuration = 60;
 let currentTime;
 
 let countdownTimer;
 
 const wordInputElement = document.getElementById("current__guessword");
+const restartButtonContainer = document.querySelector(".restart");
+const restarButtonElement = document.querySelector(".restart button");
 
 function startTimer() {
   if (!countdownTimer) {
     countdownTimer = setInterval(() => {
       if (currentTime > 0) {
         currentTime--;
-        console.log(
-          "timer is currently",
-          currentTime,
-          "timer interval is",
-          countdownTimer
-        );
         updateUITimerDisplay();
       }
     }, 1000);
@@ -34,7 +30,6 @@ function stopTimer() {
 
 function updateWordsGuessedCorrectly(updatedValue) {
   wordsGuessedCorrectly = updatedValue;
-  console.log("correct words now", wordsGuessedCorrectly);
   document.getElementById("correct__guess__counter").textContent =
     wordsGuessedCorrectly;
 }
@@ -45,7 +40,6 @@ function updateUITimerDisplay() {
 }
 
 function updateUIWordList(word, definition) {
-  // console.log("updating ui with words", wordToGuess);
   wordToGuess = sanitizeWord(word);
 
   document.querySelector(
@@ -56,25 +50,24 @@ function updateUIWordList(word, definition) {
 }
 
 async function fetchNewWord() {
-  parseFetchResult({
-    word: "test!wor_d",
-    definitions: "the definition of a word that definitely exists",
-  });
-  return;
+  // parseFetchResult({
+  //   word: "test!wor_d",
+  //   definitions: "the definition of a word that definitely exists",
+  // });
+  // return;
 
-  // try {
-  //   let res = await fetch(apiEndpointURL);
-  //   if (res.ok) {
-  //     let data = await res.json();
-  //     parseFetchResult(data);
-  //   }
-  // } catch (e) {
-  //   console.error(e);
-  // }
+  try {
+    let res = await fetch(apiEndpointURL);
+    if (res.ok) {
+      let data = await res.json();
+      parseFetchResult(data);
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function parseFetchResult(result) {
-  console.log("fetched result", result);
   let { word, definitions } = result;
 
   updateUIWordList(word, definitions);
@@ -97,24 +90,19 @@ async function beginGameRound() {
   currentTime = roundDuration;
   updateWordsGuessedCorrectly(0);
 
-  // wordInputElement.setAttribute("disabled", false);
   wordInputElement.removeAttribute("disabled");
-  // wordInputElement.disabled = "false";
   await resetGuessWord();
   if (!countdownTimer) startTimer();
-  wordInputElement.focus();
-  // startTimer();
 }
 
 function endGameRound() {
   stopTimer();
-  console.log("countdown timer state", countdownTimer);
   wordInputElement.setAttribute("disabled", null);
   promptToRestart();
 }
 
 function displayPrompt(message) {
-  applyBackgroundBlur();
+  applyBackgroundFade();
 
   let promptElement = document.createElement("div");
   promptElement.classList.add("ui__prompt", "active");
@@ -137,13 +125,13 @@ function displayPrompt(message) {
   promptElement.appendChild(promptBtnDiv);
 
   confirmBtn.addEventListener("click", async (e) => {
-    applyBackgroundBlur();
+    applyBackgroundFade();
     promptElement.classList.remove("active");
     await beginGameRound();
   });
 
   cancelBtn.addEventListener("click", (e) => {
-    applyBackgroundBlur();
+    applyBackgroundFade();
     promptElement.classList.remove("active");
     return;
   });
@@ -151,7 +139,7 @@ function displayPrompt(message) {
   document.querySelector("body").appendChild(promptElement);
 }
 
-function applyBackgroundBlur() {
+function applyBackgroundFade() {
   document.querySelector("body").classList.toggle("blurred");
 }
 
@@ -164,15 +152,23 @@ async function guessWasSuccessful() {
   updateWordsGuessedCorrectly(wordsGuessedCorrectly);
   wordInputElement.value = "";
 
-  console.log("Yeah! You guessed it!");
   await resetGuessWord();
 }
 
 async function resetGuessWord() {
-  // wordInputElement.focus();
+  wordInputElement.focus();
   await fetchNewWord();
   if (!countdownTimer) startTimer();
 }
+
+function addRestartButtonToDOM() {
+  restartButtonContainer.classList.add("visible");
+}
+
+restarButtonElement.addEventListener("click", (e) => {
+  stopTimer();
+  beginGameRound();
+});
 
 wordInputElement.addEventListener("input", async (e) => {
   if (checkIfWordIsCorrect(e.target.value) === true) {
@@ -183,6 +179,6 @@ wordInputElement.addEventListener("input", async (e) => {
 });
 
 window.addEventListener("DOMContentLoaded", async (e) => {
+  addRestartButtonToDOM();
   beginGameRound();
-  // displayPrompt("Test message for the lulz.");
 });
